@@ -1,0 +1,4 @@
+*.gem
+spike.rb
+/.DS_Store
+.byebug_history
