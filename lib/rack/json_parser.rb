@@ -8,7 +8,7 @@ module Rack
   # served by the application without interference by this middleware. This
   # however requires the client and app to set the 'Content-Type' correctly.
   class JSONParser
-    ENV_PAYLOAD_KEY = 'payload'
+    ENV_PAYLOAD_KEY = 'payload'.freeze
 
     def initialize(app, transform_request: true, transform_response: true)
       @app = app
@@ -16,8 +16,10 @@ module Rack
       @transform_response = transform_response
     end
 
+    # Loads the request JSON string into a Hash instance.
+    # Expects the app response body to be an object instance e.g. Hash,
+    # putting the object in an array will likely cause unexpected JSON.
     def call(env)
-      # load the json string into a Hash instance
       if transform_request?(env)
         env[ENV_PAYLOAD_KEY] = Oj.load(env['rack.input'])
       end
@@ -25,8 +27,6 @@ module Rack
       status, headers, body = @app.call(env)
 
       if body && transform_response?(headers)
-        # expects the body to be an object instance e.g. Hash
-        # putting the object in an array will cause unexpected json
         body = Oj.dump(body)
         headers['CONTENT_LENGTH'] = body.length.to_s
         body = [body] unless body.is_a?(Array)
@@ -35,7 +35,7 @@ module Rack
       [status, headers, body]
     end
 
-    private
+  private
 
     def transform_request?(env)
       @transform_request &&
