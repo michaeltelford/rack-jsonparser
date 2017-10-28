@@ -224,6 +224,8 @@ class TestJSONParser < Minitest::Test
     assert_equal expected_res, m.call(request)
   end
 
+  #-------------------------- Transform Request -------------------------
+
   def test_transform_request_is_true
     m = Rack::JSONParser.new(proc {})
     assert m.send :transform_request?,
@@ -232,21 +234,67 @@ class TestJSONParser < Minitest::Test
           '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
   end
 
-  def test_transform_request_is_false
+  def test_transform_request_is_false_with_configuration
+    m = Rack::JSONParser.new(proc {}, transform_request: false)
+    refute m.send :transform_request?, {
+      'CONTENT_TYPE' => 'application/json',
+      'rack.input' =>
+        '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
+    }
+  end
+
+  def test_transform_request_is_false_with_empty_request
     m = Rack::JSONParser.new(proc {})
     refute m.send :transform_request?, {}
   end
 
+  def test_transform_request_is_false_with_missing_rack_input
+    m = Rack::JSONParser.new(proc {})
+    refute m.send :transform_request?, {
+      'CONTENT_TYPE' => 'application/json',
+    }
+  end
+
+  def test_transform_request_is_false_with_missing_content_type
+    m = Rack::JSONParser.new(proc {})
+    refute m.send :transform_request?, {
+      'rack.input' =>
+        '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
+    }
+  end
+
+  #-------------------------- Transform Response -------------------------
+
   def test_transform_response_is_true
     m = Rack::JSONParser.new(proc {})
     assert m.send :transform_response?,
-        'CONTENT_TYPE' => 'application/json',
-        'rack.input' =>
-          '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
+        { 'CONTENT_TYPE' => 'application/json' },
+        { "forenames" => ["Napoleon", "Neech"], "surname" => "Manly" }
   end
 
-  def test_transform_response_is_false
+  def test_transform_response_is_false_with_configuration
+    m = Rack::JSONParser.new(proc {}, transform_response: false)
+    refute m.send :transform_response?,
+        { 'CONTENT_TYPE' => 'application/json' },
+        { "forenames" => ["Napoleon", "Neech"], "surname" => "Manly" }
+  end
+
+  def test_transform_response_is_false_with_empty_response
     m = Rack::JSONParser.new(proc {})
-    refute m.send :transform_response?, {}
+    refute m.send :transform_response?, {}, {}
+  end
+
+  def test_transform_response_is_false_with_missing_body
+    m = Rack::JSONParser.new(proc {})
+    refute m.send :transform_response?, {
+      'CONTENT_TYPE' => 'application/json'
+    }, nil
+  end
+
+  def test_transform_response_is_false_with_missing_content_type
+    m = Rack::JSONParser.new(proc {})
+    refute m.send :transform_response?, {}, {
+      "forenames" => ["Napoleon", "Neech"], "surname" => "Manly"
+    }
   end
 end

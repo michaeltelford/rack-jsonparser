@@ -10,6 +10,9 @@ module Rack
   class JSONParser
     ENV_PAYLOAD_KEY = 'payload'.freeze
 
+    # Called via the rack `use` method. Used to register the middleware and
+    # optionally toggle request and response processing of JSON to Object.
+    # By default both the request and response is processed and transformed.
     def initialize(app, transform_request: true, transform_response: true)
       @app = app
       @transform_request = transform_request
@@ -19,6 +22,8 @@ module Rack
     # Loads the request JSON string into a Hash instance.
     # Expects the app response body to be an object instance e.g. Hash,
     # putting the object in an array will likely cause unexpected JSON.
+    # If the response body is processed then the `CONTENT_LENGTH` header will
+    # be set to the body.length.
     def call(env)
       if transform_request?(env)
         env[ENV_PAYLOAD_KEY] = Oj.load(env['rack.input'])
@@ -26,7 +31,7 @@ module Rack
 
       status, headers, body = @app.call(env)
 
-      if body && transform_response?(headers)
+      if transform_response?(headers, body)
         body = Oj.dump(body)
         headers['CONTENT_LENGTH'] = body.length.to_s
         body = [body] unless body.is_a?(Array)
@@ -37,6 +42,9 @@ module Rack
 
   private
 
+    # Determine whether or not to transform the JSON request from the client
+    # into an Object. Takes into account the `@transform_request` variable and
+    # request parameters such as headers and request body.
     def transform_request?(env)
       @transform_request &&
         env['CONTENT_TYPE'] == 'application/json' &&
@@ -44,9 +52,13 @@ module Rack
         true # so the return value is true if all prior conditions are true
     end
 
-    def transform_response?(headers)
+    # Determine whether or not to transform the JSON response from the app
+    # into a JSON string. Takes into account the `@transform_response` variable
+    # and response parameters such as headers and response body.
+    def transform_response?(headers, body)
       @transform_response &&
         headers['CONTENT_TYPE'] == 'application/json' &&
+        body &&
         true # so the return value is true if all prior conditions are true
     end
   end
