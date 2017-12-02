@@ -2,10 +2,8 @@ source 'https://rubygems.org'
 
 ruby '~> 2.4.0'
 
-group :production do
-  gem 'oj', '~> 3'
-  gem 'rack', '~> 2'
-end
+gem 'oj', '~> 3'
+gem 'rack', '~> 2'
 
 group :development do
   gem 'byebug'
