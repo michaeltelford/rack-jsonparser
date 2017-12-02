@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name                  = 'rack-jsonparser'
-  s.version               = '0.1.3'
+  s.version               = '0.1.4'
   s.platform              = Gem::Platform::RUBY
   s.required_ruby_version = '~> 2.4.0'
   s.licenses              = ['MIT']
@@ -11,4 +11,7 @@ Gem::Specification.new do |s|
   s.description           = %q{Rack middleware for processing JSON requests and responses using the 'oj' gem.}
   s.files                 = Dir['lib/**/*.rb', 'README.md']
   s.require_paths         = ['lib']
+
+  s.add_runtime_dependency 'oj', '~> 3'
+  s.add_runtime_dependency 'rack', '~> 2'
 end
