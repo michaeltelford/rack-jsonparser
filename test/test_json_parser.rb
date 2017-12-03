@@ -27,11 +27,11 @@ class TestJSONParser < Minitest::Test
   end
 
   def test_pass_through_using_constructor
-    request       = { 'CONTENT_TYPE' => 'application/json' }
-    response      = [200, { 'CONTENT_TYPE' => 'application/json' },
+    request       = { 'Content-Type' => 'application/json' }
+    response      = [200, { 'Content-Type' => 'application/json' },
                       ['It works!']]
-    expected_req  = { 'CONTENT_TYPE' => 'application/json' }
-    expected_res  = [200, { 'CONTENT_TYPE' => 'application/json' },
+    expected_req  = { 'Content-Type' => 'application/json' }
+    expected_res  = [200, { 'Content-Type' => 'application/json' },
                       ['It works!']]
 
     app = proc do |env|
@@ -47,21 +47,21 @@ class TestJSONParser < Minitest::Test
 
   def test_constructor_processes_request_only
     request = {
-        'CONTENT_TYPE' => 'application/json',
+        'Content-Type' => 'application/json',
         'rack.input' =>
           '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
       }
-    response = [200, { 'CONTENT_TYPE' => 'application/json' },
+    response = [200, { 'Content-Type' => 'application/json' },
       ['{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }']]
     expected_req = {
-      'CONTENT_TYPE' => 'application/json',
+      'Content-Type' => 'application/json',
       'rack.input' =>
         '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }',
       'payload' => {
         'forenames' => %w[Napoleon Neech], 'surname' => 'Manly'
       }
     }
-    expected_res = [200, { 'CONTENT_TYPE' => 'application/json' },
+    expected_res = [200, { 'Content-Type' => 'application/json' },
       ['{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }']]
 
     app = proc do |env|
@@ -75,20 +75,20 @@ class TestJSONParser < Minitest::Test
 
   def test_constructor_processes_response_only
     request = {
-        'CONTENT_TYPE' => 'application/json',
+        'Content-Type' => 'application/json',
         'rack.input' =>
           '{"forenames":["Napoleon", "Neech"],"surname":"Manly"}'
       }
-    response = [200, { 'CONTENT_TYPE' => 'application/json' },
+    response = [200, { 'Content-Type' => 'application/json' },
       { 'full_name' => 'Napoleon Neech Manly' }]
     expected_req = {
-        'CONTENT_TYPE' => 'application/json',
+        'Content-Type' => 'application/json',
         'rack.input' =>
           '{"forenames":["Napoleon", "Neech"],"surname":"Manly"}'
       }
     expected_res = [200, {
-        'CONTENT_TYPE' => 'application/json',
-        'CONTENT_LENGTH' => '36'
+        'Content-Type' => 'application/json',
+        'Content-Length' => '36'
       },
       ['{"full_name":"Napoleon Neech Manly"}']]
 
@@ -103,14 +103,14 @@ class TestJSONParser < Minitest::Test
 
   def test_parser_processes_request_and_response
     request = {
-        'CONTENT_TYPE' => 'application/json',
+        'Content-Type' => 'application/json',
         'rack.input' =>
           '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
       }
-    response = [200, { 'CONTENT_TYPE' => 'application/json' },
+    response = [200, { 'Content-Type' => 'application/json' },
       { 'full_name' => 'Napoleon Neech Manly' }]
     expected_req = {
-        'CONTENT_TYPE' => 'application/json',
+        'Content-Type' => 'application/json',
         'rack.input' =>
           '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }',
         'payload' => {
@@ -118,8 +118,8 @@ class TestJSONParser < Minitest::Test
         }
       }
     expected_res = [200, {
-        'CONTENT_TYPE' => 'application/json',
-        'CONTENT_LENGTH' => '36'
+        'Content-Type' => 'application/json',
+        'Content-Length' => '36'
       },
       ['{"full_name":"Napoleon Neech Manly"}']]
 
@@ -134,11 +134,11 @@ class TestJSONParser < Minitest::Test
 
   def test_parser_processes_string_type
     request = {}
-    response = [200, { 'CONTENT_TYPE' => 'application/json' }, 'hello world']
+    response = [200, { 'Content-Type' => 'application/json' }, 'hello world']
     expected_req = {}
     expected_res = [200, {
-        'CONTENT_TYPE' => 'application/json',
-        'CONTENT_LENGTH' => '13'
+        'Content-Type' => 'application/json',
+        'Content-Length' => '13'
       }, ["\"hello world\""]]
 
     app = proc do |env|
@@ -153,11 +153,11 @@ class TestJSONParser < Minitest::Test
   def test_parser_processes_object_type
     obj = OpenStruct.new(name: 'Michael', pets: %w[Harold Molly]).freeze
     request = {}
-    response = [200, { 'CONTENT_TYPE' => 'application/json' }, obj]
+    response = [200, { 'Content-Type' => 'application/json' }, obj]
     expected_req = {}
     expected_res = [200, {
-        'CONTENT_TYPE' => 'application/json',
-        'CONTENT_LENGTH' => '74'
+        'Content-Type' => 'application/json',
+        'Content-Length' => '74'
       }, ["{\"^o\":\"OpenStruct\",\"table\":{\":name\":\"Michael\",\
 \":pets\":[\"Harold\",\"Molly\"]}}"]]
 
@@ -172,14 +172,14 @@ class TestJSONParser < Minitest::Test
 
   def test_content_type_processes_request_only
     request = {
-        'CONTENT_TYPE' => 'application/json',
+        'Content-Type' => 'application/json',
         'rack.input' =>
           '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
       }
     response = [200, {},
       ['{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }']]
     expected_req = {
-      'CONTENT_TYPE' => 'application/json',
+      'Content-Type' => 'application/json',
       'rack.input' =>
         '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }',
       'payload' => {
@@ -203,15 +203,15 @@ class TestJSONParser < Minitest::Test
         'rack.input' =>
           '{"forenames":["Napoleon", "Neech"],"surname":"Manly"}'
       }
-    response = [200, { 'CONTENT_TYPE' => 'application/json' },
+    response = [200, { 'Content-Type' => 'application/json' },
       { 'full_name' => 'Napoleon Neech Manly' }]
     expected_req = {
         'rack.input' =>
           '{"forenames":["Napoleon", "Neech"],"surname":"Manly"}'
       }
     expected_res = [200, {
-        'CONTENT_TYPE' => 'application/json',
-        'CONTENT_LENGTH' => '36'
+        'Content-Type' => 'application/json',
+        'Content-Length' => '36'
       },
       ['{"full_name":"Napoleon Neech Manly"}']]
 
@@ -229,7 +229,7 @@ class TestJSONParser < Minitest::Test
   def test_transform_request_is_true
     m = Rack::JSONParser.new(proc {})
     assert m.send :transform_request?,
-        'CONTENT_TYPE' => 'application/json',
+        'Content-Type' => 'application/json',
         'rack.input' =>
           '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
   end
@@ -237,7 +237,7 @@ class TestJSONParser < Minitest::Test
   def test_transform_request_is_false_with_configuration
     m = Rack::JSONParser.new(proc {}, transform_request: false)
     refute m.send :transform_request?, {
-      'CONTENT_TYPE' => 'application/json',
+      'Content-Type' => 'application/json',
       'rack.input' =>
         '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }'
     }
@@ -251,7 +251,7 @@ class TestJSONParser < Minitest::Test
   def test_transform_request_is_false_with_missing_rack_input
     m = Rack::JSONParser.new(proc {})
     refute m.send :transform_request?, {
-      'CONTENT_TYPE' => 'application/json',
+      'Content-Type' => 'application/json',
     }
   end
 
@@ -268,14 +268,21 @@ class TestJSONParser < Minitest::Test
   def test_transform_response_is_true
     m = Rack::JSONParser.new(proc {})
     assert m.send :transform_response?,
-        { 'CONTENT_TYPE' => 'application/json' },
+        { 'Content-Type' => 'application/json' },
+        { "forenames" => ["Napoleon", "Neech"], "surname" => "Manly" }
+  end
+
+  def test_transform_response_is_true_with_odd_case_content_type
+    m = Rack::JSONParser.new(proc {})
+    assert m.send :transform_response?,
+        { 'conTeNt-tyPe' => 'apPlicAtion/jsOn' },
         { "forenames" => ["Napoleon", "Neech"], "surname" => "Manly" }
   end
 
   def test_transform_response_is_false_with_configuration
     m = Rack::JSONParser.new(proc {}, transform_response: false)
     refute m.send :transform_response?,
-        { 'CONTENT_TYPE' => 'application/json' },
+        { 'Content-Type' => 'application/json' },
         { "forenames" => ["Napoleon", "Neech"], "surname" => "Manly" }
   end
 
@@ -287,7 +294,7 @@ class TestJSONParser < Minitest::Test
   def test_transform_response_is_false_with_missing_body
     m = Rack::JSONParser.new(proc {})
     refute m.send :transform_response?, {
-      'CONTENT_TYPE' => 'application/json'
+      'Content-Type' => 'application/json'
     }, nil
   end
 

@@ -2,7 +2,7 @@ require 'rack'
 # require 'rack/json_parser'
 require_relative 'lib/rack/json_parser'
 
-COMMON_HEADERS = { 'CONTENT_TYPE' => 'application/json' }.freeze
+COMMON_HEADERS = { 'Content-Type' => 'application/json' }.freeze
 
 # handler helper to build a response
 # taking an object as the body which is transformed by JSONParser middleware

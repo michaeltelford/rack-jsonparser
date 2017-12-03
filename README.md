@@ -47,7 +47,7 @@ handler = proc do |env|
   payload = env['payload']
   full_name = payload['forenames'].push(payload['surname']).join(' ')
   res_hash = { 'full_name' => full_name }
-  [200, { 'CONTENT_TYPE' => 'application/json' }, res_hash]
+  [200, { 'Content-Type' => 'application/json' }, res_hash]
 end
 
 app = Rack::Builder.new do

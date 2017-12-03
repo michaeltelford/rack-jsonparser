@@ -8,7 +8,13 @@ module Rack
   # served by the application without interference by this middleware. This
   # however requires the client and app to set the 'Content-Type' correctly.
   class JSONParser
-    ENV_PAYLOAD_KEY = 'payload'.freeze
+    CONTENT_TYPE_KEY    = 'Content-Type'.freeze
+    CONTENT_LENGTH_KEY  = 'Content-Length'.freeze
+
+    CONTENT_TYPE_JSON   = 'application/json'.freeze
+
+    ENV_PAYLOAD_KEY     = 'payload'.freeze
+    ENV_RACK_INPUT_KEY  = 'rack.input'.freeze
 
     # Called via the rack `use` method. Used to register the middleware and
     # optionally toggle request and response processing of JSON to Object.
@@ -22,18 +28,18 @@ module Rack
     # Loads the request JSON string into a Hash instance.
     # Expects the app response body to be an object instance e.g. Hash,
     # putting the object in an array will likely cause unexpected JSON.
-    # If the response body is processed then the `CONTENT_LENGTH` header will
-    # be set to the body.length.
+    # If the response body is processed then the `Content-Length` header will
+    # be set to the body#length.
     def call(env)
       if transform_request?(env)
-        env[ENV_PAYLOAD_KEY] = Oj.load(env['rack.input'])
+        env[ENV_PAYLOAD_KEY] = Oj.load(env[ENV_RACK_INPUT_KEY])
       end
 
       status, headers, body = @app.call(env)
 
       if transform_response?(headers, body)
         body = Oj.dump(body)
-        headers['CONTENT_LENGTH'] = body.length.to_s
+        headers[CONTENT_LENGTH_KEY] = body.length.to_s
         body = [body] unless body.is_a?(Array)
       end
 
@@ -47,8 +53,8 @@ module Rack
     # request parameters such as headers and request body.
     def transform_request?(env)
       @transform_request &&
-        env['CONTENT_TYPE'] == 'application/json' &&
-        env['rack.input'] &&
+        env[CONTENT_TYPE_KEY] == CONTENT_TYPE_JSON &&
+        env[ENV_RACK_INPUT_KEY] &&
         true # so the return value is true if all prior conditions are true
     end
 
@@ -57,7 +63,7 @@ module Rack
     # and response parameters such as headers and response body.
     def transform_response?(headers, body)
       @transform_response &&
-        headers['CONTENT_TYPE'] == 'application/json' &&
+        headers[CONTENT_TYPE_KEY] == CONTENT_TYPE_JSON &&
         body &&
         true # so the return value is true if all prior conditions are true
     end
