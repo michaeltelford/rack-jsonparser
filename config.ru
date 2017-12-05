@@ -4,19 +4,19 @@ require_relative 'lib/rack/json_parser'
 
 COMMON_HEADERS = { 'Content-Type' => 'application/json' }.freeze
 
-# handler helper to build a response
-# taking an object as the body which is transformed by JSONParser middleware
+# Handler helper to build a response.
+# Takes an object as the body which is transformed by JSONParser middleware.
 def respond(status, body = {}, headers = {})
   headers = COMMON_HEADERS.merge(headers)
   [status, headers, body]
 end
 
-# example rack app for testing middleware
+# Example rack app for testing middleware.
 def app
   healthcheck = proc { [204, {}, []] }
   hello = proc { respond 200, 'message' => 'Bout ye!' }
   greet = proc do |env|
-    req = env['payload']
+    req = env['request.payload']
     full_name = req['forenames'].push(req['surname']).join(' ')
     respond 200, 'full_name' => full_name
   end

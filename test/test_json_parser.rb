@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require 'rack'
 require 'json_parser'
 
 class TestJSONParser < Minitest::Test
@@ -57,7 +58,7 @@ class TestJSONParser < Minitest::Test
       'Content-Type' => 'application/json',
       'rack.input' =>
         '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }',
-      'payload' => {
+      'request.payload' => {
         'forenames' => %w[Napoleon Neech], 'surname' => 'Manly'
       }
     }
@@ -113,7 +114,7 @@ class TestJSONParser < Minitest::Test
         'Content-Type' => 'application/json',
         'rack.input' =>
           '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }',
-        'payload' => {
+        'request.payload' => {
           'forenames' => %w[Napoleon Neech], 'surname' => 'Manly'
         }
       }
@@ -182,7 +183,7 @@ class TestJSONParser < Minitest::Test
       'Content-Type' => 'application/json',
       'rack.input' =>
         '{ "forenames": ["Napoleon", "Neech"], "surname": "Manly" }',
-      'payload' => {
+      'request.payload' => {
         'forenames' => %w[Napoleon Neech], 'surname' => 'Manly'
       }
     }
@@ -274,9 +275,22 @@ class TestJSONParser < Minitest::Test
 
   def test_transform_response_is_true_with_odd_case_content_type
     m = Rack::JSONParser.new(proc {})
-    assert m.send :transform_response?,
-        { 'conTeNt-tyPe' => 'apPlicAtion/jsOn' },
-        { "forenames" => ["Napoleon", "Neech"], "surname" => "Manly" }
+    headers = Rack::Utils::HeaderHash.new({
+      'conTeNt-tyPe' => 'apPlicAtion/jsOn'
+    })
+    assert m.send :transform_response?, headers, {
+      "forenames" => ["Napoleon", "Neech"], "surname" => "Manly"
+    }
+  end
+
+  def test_transform_response_is_true_with_underscore_content_type
+    m = Rack::JSONParser.new(proc {})
+    headers = Rack::Utils::HeaderHash.new({
+      'CONTENT_TYPE' => 'application/json'
+    })
+    assert m.send :transform_response?, headers, {
+      "forenames" => ["Napoleon", "Neech"], "surname" => "Manly"
+    }
   end
 
   def test_transform_response_is_false_with_configuration
@@ -303,5 +317,51 @@ class TestJSONParser < Minitest::Test
     refute m.send :transform_response?, {}, {
       "forenames" => ["Napoleon", "Neech"], "surname" => "Manly"
     }
+  end
+
+  #-------------------------- JSON Content Type -------------------------
+
+  def test_json_content_type_is_true
+    env = { 'Content-Type' => 'application/json' }
+    m = Rack::JSONParser.new(proc {})
+    assert m.send :json_content_type?, env
+  end
+
+  def test_json_content_type_is_true_with_odd_case_type_value
+    env = { 'Content-Type' => 'apPlicAtion/jSoN' }
+    m = Rack::JSONParser.new(proc {})
+    assert m.send :json_content_type?, env
+  end
+
+  def test_json_content_type_is_true_with_underscore
+    env = { 'CONTENT_TYPE' => 'application/json' }
+    m = Rack::JSONParser.new(proc {})
+    assert m.send :json_content_type?, env
+  end
+
+  def test_json_content_type_is_false
+    env = {}
+    m = Rack::JSONParser.new(proc {})
+    refute m.send :json_content_type?, env
+  end
+
+  def test_json_content_type_is_case_sensitive_with_hash
+    env = { 'Content-TYPE' => 'application/json' }
+    m = Rack::JSONParser.new(proc {})
+    refute m.send :json_content_type?, env
+  end
+
+  def test_json_content_type_is_case_insensitive_with_header_hash
+    h = { 'Content-TYPE' => 'application/json' }
+    env = Rack::Utils::HeaderHash.new h
+    m = Rack::JSONParser.new(proc {})
+    assert m.send :json_content_type?, env
+  end
+
+  def test_json_content_type_with_header_hash_odd_case_type_value
+    h = { 'Content-Type' => 'apPlicAtion/jSoN' }
+    env = Rack::Utils::HeaderHash.new h
+    m = Rack::JSONParser.new(proc {})
+    assert m.send :json_content_type?, env
   end
 end

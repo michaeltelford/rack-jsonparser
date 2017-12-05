@@ -1,4 +1,5 @@
 require 'oj'
+require 'rack'
 
 module Rack
   # Rack middleware which transforms JSON during the request and response.
@@ -8,13 +9,14 @@ module Rack
   # served by the application without interference by this middleware. This
   # however requires the client and app to set the 'Content-Type' correctly.
   class JSONParser
-    CONTENT_TYPE_KEY    = 'Content-Type'.freeze
-    CONTENT_LENGTH_KEY  = 'Content-Length'.freeze
+    CONTENT_TYPE_KEY     = 'Content-Type'.freeze
+    CONTENT_TYPE_ALT_KEY = 'CONTENT_TYPE'.freeze
+    CONTENT_LENGTH_KEY   = 'Content-Length'.freeze
 
-    CONTENT_TYPE_JSON   = 'application/json'.freeze
+    CONTENT_TYPE_JSON    = 'application/json'.freeze
 
-    ENV_PAYLOAD_KEY     = 'payload'.freeze
-    ENV_RACK_INPUT_KEY  = 'rack.input'.freeze
+    ENV_PAYLOAD_KEY      = 'request.payload'.freeze
+    ENV_RACK_INPUT_KEY   = 'rack.input'.freeze
 
     # Called via the rack `use` method. Used to register the middleware and
     # optionally toggle request and response processing of JSON to Object.
@@ -31,16 +33,19 @@ module Rack
     # If the response body is processed then the `Content-Length` header will
     # be set to the body#length.
     def call(env)
+      env = Rack::Utils::HeaderHash.new(env)
+
       if transform_request?(env)
         env[ENV_PAYLOAD_KEY] = Oj.load(env[ENV_RACK_INPUT_KEY])
       end
 
       status, headers, body = @app.call(env)
+      headers = Rack::Utils::HeaderHash.new(headers)
 
       if transform_response?(headers, body)
         body = Oj.dump(body)
         headers[CONTENT_LENGTH_KEY] = body.length.to_s
-        body = [body] unless body.is_a?(Array)
+        body = [body] unless body.respond_to?(:each)
       end
 
       [status, headers, body]
@@ -53,7 +58,7 @@ module Rack
     # request parameters such as headers and request body.
     def transform_request?(env)
       @transform_request &&
-        env[CONTENT_TYPE_KEY] == CONTENT_TYPE_JSON &&
+        json_content_type?(env) &&
         env[ENV_RACK_INPUT_KEY] &&
         true # so the return value is true if all prior conditions are true
     end
@@ -63,9 +68,24 @@ module Rack
     # and response parameters such as headers and response body.
     def transform_response?(headers, body)
       @transform_response &&
-        headers[CONTENT_TYPE_KEY] == CONTENT_TYPE_JSON &&
+        json_content_type?(headers) &&
         body &&
         true # so the return value is true if all prior conditions are true
+    end
+
+    # Determine whether or not the 'Content-Type' is 'application/json'.
+    # The content type value assertion is always case insensitive and supports
+    # both a dash/hyphen and an underscore. The content type key assertion
+    # depends on the env parameter. A Hash is case sensitive by default whereas
+    # a Rack::Utils::HeaderHash is case insensitive.
+    def json_content_type?(env)
+      if env.include?(CONTENT_TYPE_KEY)
+        env[CONTENT_TYPE_KEY].downcase == CONTENT_TYPE_JSON.downcase
+      elsif env.include?(CONTENT_TYPE_ALT_KEY)
+        env[CONTENT_TYPE_ALT_KEY].downcase == CONTENT_TYPE_JSON.downcase
+      else
+        false
+      end
     end
   end
 end

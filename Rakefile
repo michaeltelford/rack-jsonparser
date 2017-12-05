@@ -1,15 +1,20 @@
 require 'rake/testtask'
 
+task default: :help
+
 Rake::TestTask.new do |t|
   t.libs << 'lib/rack'
   t.test_files = FileList['test/test_*.rb']
 end
 
-task default: :test
+desc 'Print available rake tasks'
+task :help do
+  system 'bundle exec rake -T'
+end
 
-desc 'Run the web app'
+desc 'Run the rack app'
 task :serve do
-  system 'rackup -s Thin -p 9292'
+  system 'bundle exec rackup -s Thin -p 9292'
 end
 
 desc 'Rebuild the gem'

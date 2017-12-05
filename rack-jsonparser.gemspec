@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name                  = 'rack-jsonparser'
-  s.version               = '0.1.4'
+  s.version               = '1.0.0'
   s.platform              = Gem::Platform::RUBY
   s.required_ruby_version = '~> 2.4.0'
   s.licenses              = ['MIT']

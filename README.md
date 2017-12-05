@@ -39,12 +39,12 @@ Below is a sample rack app which uses the middleware to send and receive JSON:
 ```ruby
 require 'rack/json_parser'
 
-# Notice how the `payload` is a Hash, not a JSON string
+# Notice how the `request.payload` is a Hash, not a JSON string
 # We return a Hash instance (or any Ruby object) for the response body
 # We can turn off the request/response parsing via the `use` method (defaults to true)
-# Parsing will only occur if enabled AND the Content-Type is `application/json`
+# Parsing will only occur if enabled AND the `Content-Type` is `application/json`
 handler = proc do |env|
-  payload = env['payload']
+  payload = env['request.payload']
   full_name = payload['forenames'].push(payload['surname']).join(' ')
   res_hash = { 'full_name' => full_name }
   [200, { 'Content-Type' => 'application/json' }, res_hash]
