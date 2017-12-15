@@ -28,7 +28,7 @@ module Rack
     end
 
     # Loads the request JSON string into a Hash instance.
-    # Expects the app response body to be an object instance e.g. Hash,
+    # Expects the app response body to be an object e.g. Hash,
     # putting the object in an array will likely cause unexpected JSON.
     # If the response body is processed then the `Content-Length` header will
     # be set to the body#length.
@@ -43,7 +43,7 @@ module Rack
       headers = Rack::Utils::HeaderHash.new(headers)
 
       if transform_response?(headers, body)
-        body = Oj.dump(body)
+        body = Oj.dump(body) unless body.is_a?(String)
         headers[CONTENT_LENGTH_KEY] = body.length.to_s
         body = [body] unless body.respond_to?(:each)
       end

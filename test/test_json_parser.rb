@@ -135,12 +135,30 @@ class TestJSONParser < Minitest::Test
 
   def test_parser_processes_string_type
     request = {}
-    response = [200, { 'Content-Type' => 'application/json' }, 'hello world']
+    response = [200, { 'Content-Type' => 'application/json' }, '{ "name": "Michael" }']
     expected_req = {}
     expected_res = [200, {
         'Content-Type' => 'application/json',
-        'Content-Length' => '13'
-      }, ["\"hello world\""]]
+        'Content-Length' => '21'
+      }, ['{ "name": "Michael" }']]
+
+    app = proc do |env|
+      assert_equal expected_req, env
+      response
+    end
+    m = Rack::JSONParser.new app
+
+    assert_equal expected_res, m.call(request)
+  end
+
+  def test_parser_proceses_empty_array
+    request = {}
+    response = [200, { 'Content-Type' => 'application/json' }, []]
+    expected_req = {}
+    expected_res = [200, {
+        'Content-Type' => 'application/json',
+        'Content-Length' => '2'
+      }, ['[]']]
 
     app = proc do |env|
       assert_equal expected_req, env

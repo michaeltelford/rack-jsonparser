@@ -32,7 +32,23 @@ require 'rack/json_parser'
 
 ## Usage
 
-Below is a sample rack app which uses the middleware to send and receive JSON:
+### Request
+
+The incoming requests JSON body will be available in `env['request.payload']`.
+
+### Response
+
+As per the rack interface your app should return an array containing the status, headers, body. This doesn't change; just remember to include the header `Content-Type: application/json`. The response body can be:
+
+- `String`: Treated as an already valid JSON string and is not processed by the middleware
+- `Hash`: The recommended type of ruby object to return, will be processed into a JSON string and sent back to the client
+- `Object`: Any ruby object can be returned, the resulting JSON will depend on the `Object#to_s` output
+
+**Note** that the above objects should **not** be encased in an `Array` just to comply with the Rack interface. The middleware will automatically encase the generated JSON `String` into an `Array` so it complies with Rack.
+
+### Example
+
+Below is a sample `rack` app which uses the middleware to send and receive JSON:
 
 > config.ru
 
@@ -40,7 +56,8 @@ Below is a sample rack app which uses the middleware to send and receive JSON:
 require 'rack/json_parser'
 
 # Notice how the `request.payload` is a Hash, not a JSON string
-# We return a Hash instance (or any Ruby object) for the response body
+# We return a Hash instance (or any Ruby object) for the response body,
+# no need to encase in an array, the middleware will do this.
 # We can turn off the request/response parsing via the `use` method (defaults to true)
 # Parsing will only occur if enabled AND the `Content-Type` is `application/json`
 handler = proc do |env|
